@@ -1,0 +1,25 @@
+"""
+HydroGeo Mini Toolkit — utilities for environmental and groundwater science.
+
+Provides unit conversions, Darcy's Law, hydraulic gradient, and contamination
+concentration calculations for field and consulting use.
+"""
+
+__version__ = "1.0.0"
+
+from hydrogeo_toolkit.conversions import convert_length, convert_flow_rate, convert_conductivity
+from hydrogeo_toolkit.darcy import darcy_flow
+from hydrogeo_toolkit.gradient import hydraulic_gradient
+from hydrogeo_toolkit.contamination import mgL_to_ugL, ugL_to_mgL, molL_to_mgL, mgL_to_molL
+
+__all__ = [
+    "convert_length",
+    "convert_flow_rate",
+    "convert_conductivity",
+    "darcy_flow",
+    "hydraulic_gradient",
+    "mgL_to_ugL",
+    "ugL_to_mgL",
+    "molL_to_mgL",
+    "mgL_to_molL",
+]

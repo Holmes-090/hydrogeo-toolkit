@@ -1,0 +1,2 @@
+# HydroGeo Mini Toolkit — Python 3.7+
+# No third-party dependencies; uses only the standard library (argparse, etc.).

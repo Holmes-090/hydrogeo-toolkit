@@ -11,6 +11,8 @@ Example:
   python hydrogeo.py pumping cooper-jacob transmissivity --q 0.01 --ds 0.5
   python hydrogeo.py pumping cooper-jacob storativity --t 1e-3 --t0 120 --r 10
   python hydrogeo.py pumping theis drawdown --q 0.01 --t 1e-3 --s 1e-4 --r 10 --time 3600
+  python hydrogeo.py slug hvorslev --r 0.05 --l 3 --t37 45
+  python hydrogeo.py slug bouwer-rice --rw 0.05 --re 1.0 --l 3 --t37 45
 """
 
 from hydrogeo_toolkit.cli import main

@@ -25,6 +25,7 @@ from hydrogeo_toolkit.pumping import (
     calculate_storativity,
     theis_drawdown,
 )
+from hydrogeo_toolkit.slug import hvorslev_k, bouwer_rice_k
 
 
 def _cmd_convert(args: argparse.Namespace) -> int:
@@ -125,6 +126,27 @@ def _cmd_pumping(args: argparse.Namespace) -> int:
         return 1
 
 
+def _cmd_slug(args: argparse.Namespace) -> int:
+    """Handle 'slug' subcommand: Hvorslev or Bouwer-Rice hydraulic conductivity."""
+    try:
+        if args.slug_method == "hvorslev":
+            print("Method: Hvorslev")
+            print(f"  r={args.r}, L={args.l}, t37={args.t37}")
+            K = hvorslev_k(args.r, args.l, args.t37)
+        elif args.slug_method == "bouwer-rice":
+            print("Method: Bouwer-Rice")
+            print(f"  rw={args.rw}, re={args.re}, L={args.l}, t37={args.t37}")
+            K = bouwer_rice_k(args.rw, args.re, args.l, args.t37)
+        else:
+            print(f"Unknown slug method: {args.slug_method}", file=sys.stderr)
+            return 1
+        print(f"K = {K}")
+        return 0
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Build the main CLI argument parser and subparsers."""
     parser = argparse.ArgumentParser(
@@ -208,6 +230,25 @@ def build_parser() -> argparse.ArgumentParser:
     theis_dd.add_argument("--r", type=float, required=True, help="Radial distance to observation well")
     theis_dd.add_argument("--time", type=float, required=True, help="Time since pumping started (T)")
     theis_dd.set_defaults(func=_cmd_pumping, method="theis", calculation="drawdown")
+
+    # --- slug (Hvorslev, Bouwer-Rice) ---
+    slug_p = subparsers.add_parser(
+        "slug",
+        help="Slug test analysis for hydraulic conductivity",
+        description="Slug test estimators: Hvorslev, Bouwer-Rice. Output: method, inputs, K.",
+    )
+    slug_sub = slug_p.add_subparsers(dest="slug_method", required=True, help="Slug test method")
+    slug_hv = slug_sub.add_parser("hvorslev", help="Hvorslev: K = (r^2*ln(L/r)) / (2*L*t37)")
+    slug_hv.add_argument("--r", type=float, required=True, help="Well radius (L)")
+    slug_hv.add_argument("--l", type=float, required=True, help="Length of screened interval (L)")
+    slug_hv.add_argument("--t37", type=float, required=True, help="Time to 37%% recovery (T)")
+    slug_hv.set_defaults(func=_cmd_slug, slug_method="hvorslev")
+    slug_br = slug_sub.add_parser("bouwer-rice", help="Bouwer-Rice: K = (rw^2*ln(re/rw)) / (2*L*t37)")
+    slug_br.add_argument("--rw", type=float, required=True, help="Well radius (L)")
+    slug_br.add_argument("--re", type=float, required=True, help="Effective radius of influence (L)")
+    slug_br.add_argument("--l", type=float, required=True, help="Screen length (L)")
+    slug_br.add_argument("--t37", type=float, required=True, help="Time to 37%% recovery (T)")
+    slug_br.set_defaults(func=_cmd_slug, slug_method="bouwer-rice")
 
     return parser
 

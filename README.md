@@ -27,6 +27,10 @@ A command-line utility for environmental and groundwater scientists. It provides
   - **Cooper–Jacob** (straight-line): *transmissivity* — T = (2.3×Q)/(4π×Δs); *storativity* — S = (2.25×T×t₀)/r²  
   - **Theis** (analytical): *drawdown* — s = (Q/(4πT))×W(u), u = r²S/(4Tt); outputs u and drawdown  
 
+- **Slug test estimators** — first-pass hydraulic conductivity from head recovery
+  - **Hvorslev** — K = (r² ln(L/r)) / (2 L t₃₇); well radius r, screen length L, time to 37% recovery t₃₇  
+  - **Bouwer–Rice** — K = (rw² ln(re/rw)) / (2 L t₃₇); well radius rw, effective radius re, screen length L, t₃₇  
+
 ---
 
 ## Installation
@@ -125,6 +129,18 @@ python hydrogeo.py pumping theis drawdown --q 0.01 --t 1e-3 --s 1e-4 --r 10 --ti
 
 Use `python hydrogeo.py pumping --help` to list methods; `pumping cooper-jacob --help` or `pumping theis --help` to list calculations.
 
+**Slug test (Hvorslev):**
+```bash
+python hydrogeo.py slug hvorslev --r 0.05 --l 3 --t37 45
+# Output: Method, inputs (r, L, t37), K (e.g. m/s)
+```
+
+**Slug test (Bouwer–Rice):**
+```bash
+python hydrogeo.py slug bouwer-rice --rw 0.05 --re 1.0 --l 3 --t37 45
+# Output: Method, inputs (rw, re, L, t37), K
+```
+
 ---
 
 ## Project Structure
@@ -138,6 +154,7 @@ HydroGeo Mini Toolkit/
     gradient.py       # I = Δh / ΔL
     contamination.py  # mg/L, µg/L, mol/L
     pumping.py        # Cooper–Jacob and Theis (transmissivity, storativity, drawdown)
+    slug.py           # Slug test: Hvorslev, Bouwer–Rice (hydraulic conductivity)
     cli.py            # argument parsing and dispatch
   hydrogeo.py         # CLI entry point
   README.md

@@ -23,6 +23,10 @@ A command-line utility for environmental and groundwater scientists. It provides
   - mg/L ↔ µg/L  
   - mol/L ↔ mg/L (with molecular weight in g/mol)
 
+- **Pumping test solvers (Cooper–Jacob straight-line method)**
+  - **Transmissivity** — T = (2.3 × Q) / (4π × Δs) from pumping rate and drawdown per log cycle  
+  - **Storativity** — S = (2.25 × T × t₀) / r² from T, time intercept t₀, and distance to observation well  
+
 ---
 
 ## Installation
@@ -51,10 +55,12 @@ python hydrogeo.py --help
 
 All calculations can also be imported and used in scripts or notebooks:
 ```python
-from hydrogeo_toolkit.darcy import calculate_flow
+from hydrogeo_toolkit.darcy import darcy_flow
+from hydrogeo_toolkit.pumping import calculate_transmissivity
 
-q = calculate_flow(k=1e-5, i=0.01, a=10)
-print(q)
+q = darcy_flow(K=1e-5, I=0.01, A=10)
+T = calculate_transmissivity(Q=0.01, delta_s=0.5)
+print(q, T)
 ```
 ---
 
@@ -100,6 +106,18 @@ python hydrogeo.py contam mg2ug --value 0.5
 # 500.0
 ```
 
+**Pumping test — Transmissivity (Cooper–Jacob):**
+```bash
+python hydrogeo.py pumping transmissivity --q 0.01 --ds 0.5
+# Q in m³/s, Δs in m → T in m²/s
+```
+
+**Pumping test — Storativity (Cooper–Jacob):**
+```bash
+python hydrogeo.py pumping storativity --t 1e-3 --t0 120 --r 10
+# T in m²/s, t0 in s, r in m → S dimensionless
+```
+
 ---
 
 ## Project Structure
@@ -112,6 +130,7 @@ HydroGeo Mini Toolkit/
     darcy.py          # Q = K * I * A
     gradient.py       # I = Δh / ΔL
     contamination.py  # mg/L, µg/L, mol/L
+    pumping.py        # Cooper–Jacob transmissivity and storativity
     cli.py            # argument parsing and dispatch
   hydrogeo.py         # CLI entry point
   README.md
@@ -138,6 +157,6 @@ MIT License. Free to use, modify, and redistribute with attribution.
 ## Future Extensions
 
 Planned additions may include:
-- Pumping test solvers (Cooper–Jacob, Theis)
+- Additional pumping test methods (e.g. Theis)
 - Simple well log visualization
 - Additional chemical property lookups

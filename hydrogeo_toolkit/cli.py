@@ -20,6 +20,10 @@ from hydrogeo_toolkit.contamination import (
     molL_to_mgL,
     mgL_to_molL,
 )
+from hydrogeo_toolkit.pumping import (
+    calculate_transmissivity,
+    calculate_storativity,
+)
 
 
 def _cmd_convert(args: argparse.Namespace) -> int:
@@ -90,6 +94,29 @@ def _cmd_contam(args: argparse.Namespace) -> int:
         return 1
 
 
+def _cmd_pumping(args: argparse.Namespace) -> int:
+    """Handle 'pumping' subcommand: Cooper–Jacob transmissivity and storativity."""
+    try:
+        if args.pumping_op == "transmissivity":
+            if args.q is None or args.ds is None:
+                print("Error: --q and --ds are required for transmissivity.", file=sys.stderr)
+                return 1
+            result = calculate_transmissivity(args.q, args.ds)
+        elif args.pumping_op == "storativity":
+            if args.t is None or args.t0 is None or args.r is None:
+                print("Error: --t, --t0, and --r are required for storativity.", file=sys.stderr)
+                return 1
+            result = calculate_storativity(args.t, args.t0, args.r)
+        else:
+            print(f"Unknown pumping operation: {args.pumping_op}", file=sys.stderr)
+            return 1
+        print(result)
+        return 0
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Build the main CLI argument parser and subparsers."""
     parser = argparse.ArgumentParser(
@@ -133,6 +160,20 @@ def build_parser() -> argparse.ArgumentParser:
     contam_p.add_argument("--value", type=float, required=True, help="Concentration value")
     contam_p.add_argument("--mw", type=float, default=None, help="Molecular weight (g/mol); required for mol2mg and mg2mol")
     contam_p.set_defaults(func=_cmd_contam)
+
+    # --- pumping (Cooper–Jacob) ---
+    pumping_p = subparsers.add_parser("pumping", help="Pumping test analysis (Cooper–Jacob straight-line method)")
+    pumping_p.add_argument(
+        "pumping_op",
+        choices=["transmissivity", "storativity"],
+        help="Calculation: transmissivity or storativity",
+    )
+    pumping_p.add_argument("--q", type=float, default=None, help="Pumping rate (L³/T); required for transmissivity")
+    pumping_p.add_argument("--ds", type=float, default=None, help="Drawdown per log cycle; required for transmissivity")
+    pumping_p.add_argument("--t", type=float, default=None, help="Transmissivity (L²/T); required for storativity")
+    pumping_p.add_argument("--t0", type=float, default=None, help="Time at zero drawdown (intercept); required for storativity")
+    pumping_p.add_argument("--r", type=float, default=None, help="Radial distance to observation well; required for storativity")
+    pumping_p.set_defaults(func=_cmd_pumping)
 
     return parser
 

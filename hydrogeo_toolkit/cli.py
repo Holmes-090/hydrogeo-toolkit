@@ -96,29 +96,28 @@ def _cmd_contam(args: argparse.Namespace) -> int:
 
 
 def _cmd_pumping(args: argparse.Namespace) -> int:
-    """Handle 'pumping' subcommand: Cooper–Jacob and Theis."""
+    """Handle 'pumping <method> <calculation>' subcommands."""
     try:
-        if args.pumping_op == "transmissivity":
-            if args.q is None or args.ds is None:
-                print("Error: --q and --ds are required for transmissivity.", file=sys.stderr)
+        if args.method == "cooper-jacob":
+            if args.calculation == "transmissivity":
+                result = calculate_transmissivity(args.q, args.ds)
+                print(result)
+            elif args.calculation == "storativity":
+                result = calculate_storativity(args.t, args.t0, args.r)
+                print(result)
+            else:
+                print(f"Unknown Cooper–Jacob calculation: {args.calculation}", file=sys.stderr)
                 return 1
-            result = calculate_transmissivity(args.q, args.ds)
-            print(result)
-        elif args.pumping_op == "storativity":
-            if args.t is None or args.t0 is None or args.r is None:
-                print("Error: --t, --t0, and --r are required for storativity.", file=sys.stderr)
+        elif args.method == "theis":
+            if args.calculation == "drawdown":
+                drawdown, u_val = theis_drawdown(args.q, args.t, args.s, args.r, args.time)
+                print(f"u={u_val}")
+                print(drawdown)
+            else:
+                print(f"Unknown Theis calculation: {args.calculation}", file=sys.stderr)
                 return 1
-            result = calculate_storativity(args.t, args.t0, args.r)
-            print(result)
-        elif args.pumping_op == "theis":
-            if args.q is None or args.t is None or args.s is None or args.r is None or args.time is None:
-                print("Error: --q, --t, --s, --r, and --time are required for theis.", file=sys.stderr)
-                return 1
-            drawdown, u_val = theis_drawdown(args.q, args.t, args.s, args.r, args.time)
-            print(f"u={u_val}")
-            print(drawdown)
         else:
-            print(f"Unknown pumping operation: {args.pumping_op}", file=sys.stderr)
+            print(f"Unknown pumping method: {args.method}", file=sys.stderr)
             return 1
         return 0
     except ValueError as e:
@@ -170,21 +169,45 @@ def build_parser() -> argparse.ArgumentParser:
     contam_p.add_argument("--mw", type=float, default=None, help="Molecular weight (g/mol); required for mol2mg and mg2mol")
     contam_p.set_defaults(func=_cmd_contam)
 
-    # --- pumping (Cooper–Jacob, Theis) ---
-    pumping_p = subparsers.add_parser("pumping", help="Pumping test analysis (Cooper–Jacob, Theis)")
-    pumping_p.add_argument(
-        "pumping_op",
-        choices=["transmissivity", "storativity", "theis"],
-        help="Calculation: transmissivity, storativity, or theis",
+    # --- pumping: method → calculation (nested subcommands) ---
+    pumping_p = subparsers.add_parser(
+        "pumping",
+        help="Pumping test analysis. Use: pumping <method> <calculation> [options]",
+        description="Pumping test analysis by method. Methods: cooper-jacob (transmissivity, storativity), theis (drawdown).",
     )
-    pumping_p.add_argument("--q", type=float, default=None, help="Pumping rate (L³/T); required for transmissivity and theis")
-    pumping_p.add_argument("--ds", type=float, default=None, help="Drawdown per log cycle; required for transmissivity")
-    pumping_p.add_argument("--t", type=float, default=None, help="Transmissivity (L²/T); required for storativity and theis")
-    pumping_p.add_argument("--t0", type=float, default=None, help="Time at zero drawdown (intercept); required for storativity")
-    pumping_p.add_argument("--s", type=float, default=None, help="Storativity (dimensionless); required for theis")
-    pumping_p.add_argument("--r", type=float, default=None, help="Radial distance to observation well; required for storativity and theis")
-    pumping_p.add_argument("--time", type=float, default=None, help="Time since pumping started (T); required for theis")
-    pumping_p.set_defaults(func=_cmd_pumping)
+    pumping_sub = pumping_p.add_subparsers(dest="method", required=True, help="Analysis method")
+
+    # Cooper–Jacob: transmissivity | storativity
+    cj_p = pumping_sub.add_parser(
+        "cooper-jacob",
+        help="Cooper–Jacob straight-line method",
+        description="Cooper–Jacob straight-line approximation. Calculations: transmissivity, storativity.",
+    )
+    cj_sub = cj_p.add_subparsers(dest="calculation", required=True, help="Quantity to calculate")
+    cj_trans = cj_sub.add_parser("transmissivity", help="T = (2.3*Q) / (4*pi*ds)")
+    cj_trans.add_argument("--q", type=float, required=True, help="Pumping rate (L³/T)")
+    cj_trans.add_argument("--ds", type=float, required=True, help="Drawdown per log cycle")
+    cj_trans.set_defaults(func=_cmd_pumping, method="cooper-jacob", calculation="transmissivity")
+    cj_stor = cj_sub.add_parser("storativity", help="S = (2.25*T*t0) / r^2")
+    cj_stor.add_argument("--t", type=float, required=True, help="Transmissivity (L²/T)")
+    cj_stor.add_argument("--t0", type=float, required=True, help="Time at zero drawdown (intercept)")
+    cj_stor.add_argument("--r", type=float, required=True, help="Radial distance to observation well")
+    cj_stor.set_defaults(func=_cmd_pumping, method="cooper-jacob", calculation="storativity")
+
+    # Theis: drawdown
+    theis_p = pumping_sub.add_parser(
+        "theis",
+        help="Theis analytical solution",
+        description="Theis transient drawdown. Calculation: drawdown.",
+    )
+    theis_sub = theis_p.add_subparsers(dest="calculation", required=True, help="Quantity to calculate")
+    theis_dd = theis_sub.add_parser("drawdown", help="s = (Q/(4*pi*T))*W(u), u = r^2*S/(4*T*t)")
+    theis_dd.add_argument("--q", type=float, required=True, help="Pumping rate (L³/T)")
+    theis_dd.add_argument("--t", type=float, required=True, help="Transmissivity (L²/T)")
+    theis_dd.add_argument("--s", type=float, required=True, help="Storativity (dimensionless)")
+    theis_dd.add_argument("--r", type=float, required=True, help="Radial distance to observation well")
+    theis_dd.add_argument("--time", type=float, required=True, help="Time since pumping started (T)")
+    theis_dd.set_defaults(func=_cmd_pumping, method="theis", calculation="drawdown")
 
     return parser
 

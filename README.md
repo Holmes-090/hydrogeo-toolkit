@@ -23,12 +23,9 @@ A command-line utility for environmental and groundwater scientists. It provides
   - mg/L ↔ µg/L  
   - mol/L ↔ mg/L (with molecular weight in g/mol)
 
-- **Pumping test solvers (Cooper–Jacob straight-line method)**
-  - **Transmissivity** — T = (2.3 × Q) / (4π × Δs) from pumping rate and drawdown per log cycle  
-  - **Storativity** — S = (2.25 × T × t₀) / r² from T, time intercept t₀, and distance to observation well  
-
-- **Pumping test solvers (Theis analytical solution)**
-  - **Theis transient drawdown** — s = (Q/(4πT)) × W(u), u = r²S/(4Tt); computes u and drawdown at time t and radius r  
+- **Pumping test solvers** — organized by method, then calculation: `pumping <method> <calculation>`
+  - **Cooper–Jacob** (straight-line): *transmissivity* — T = (2.3×Q)/(4π×Δs); *storativity* — S = (2.25×T×t₀)/r²  
+  - **Theis** (analytical): *drawdown* — s = (Q/(4πT))×W(u), u = r²S/(4Tt); outputs u and drawdown  
 
 ---
 
@@ -109,23 +106,24 @@ python hydrogeo.py contam mg2ug --value 0.5
 # 500.0
 ```
 
-**Pumping test — Transmissivity (Cooper–Jacob):**
-```bash
-python hydrogeo.py pumping transmissivity --q 0.01 --ds 0.5
-# Q in m³/s, Δs in m → T in m²/s
-```
+**Pumping tests** use a method-based hierarchy: `pumping <method> <calculation>`.
 
-**Pumping test — Storativity (Cooper–Jacob):**
+*Cooper–Jacob (straight-line method):*
 ```bash
-python hydrogeo.py pumping storativity --t 1e-3 --t0 120 --r 10
+python hydrogeo.py pumping cooper-jacob transmissivity --q 0.01 --ds 0.5
+# Q in m³/s, Δs in m → T in m²/s
+
+python hydrogeo.py pumping cooper-jacob storativity --t 1e-3 --t0 120 --r 10
 # T in m²/s, t0 in s, r in m → S dimensionless
 ```
 
-**Pumping test — Theis transient drawdown:**
+*Theis (analytical solution):*
 ```bash
-python hydrogeo.py pumping theis --q 0.01 --t 1e-3 --s 1e-4 --r 10 --time 3600
+python hydrogeo.py pumping theis drawdown --q 0.01 --t 1e-3 --s 1e-4 --r 10 --time 3600
 # Output: u value, then drawdown (e.g. m)
 ```
+
+Use `python hydrogeo.py pumping --help` to list methods; `pumping cooper-jacob --help` or `pumping theis --help` to list calculations.
 
 ---
 

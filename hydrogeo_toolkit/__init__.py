@@ -12,7 +12,7 @@ from hydrogeo_toolkit.conversions import convert_length, convert_flow_rate, conv
 from hydrogeo_toolkit.darcy import darcy_flow
 from hydrogeo_toolkit.gradient import hydraulic_gradient
 from hydrogeo_toolkit.contamination import mgL_to_ugL, ugL_to_mgL, molL_to_mgL, mgL_to_molL
-from hydrogeo_toolkit.pumping import calculate_transmissivity, calculate_storativity
+from hydrogeo_toolkit.pumping import calculate_transmissivity, calculate_storativity, theis_drawdown
 
 __all__ = [
     "convert_length",
@@ -26,4 +26,5 @@ __all__ = [
     "mgL_to_molL",
     "calculate_transmissivity",
     "calculate_storativity",
+    "theis_drawdown",
 ]

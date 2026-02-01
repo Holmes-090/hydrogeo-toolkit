@@ -27,6 +27,9 @@ A command-line utility for environmental and groundwater scientists. It provides
   - **Transmissivity** — T = (2.3 × Q) / (4π × Δs) from pumping rate and drawdown per log cycle  
   - **Storativity** — S = (2.25 × T × t₀) / r² from T, time intercept t₀, and distance to observation well  
 
+- **Pumping test solvers (Theis analytical solution)**
+  - **Theis transient drawdown** — s = (Q/(4πT)) × W(u), u = r²S/(4Tt); computes u and drawdown at time t and radius r  
+
 ---
 
 ## Installation
@@ -118,6 +121,12 @@ python hydrogeo.py pumping storativity --t 1e-3 --t0 120 --r 10
 # T in m²/s, t0 in s, r in m → S dimensionless
 ```
 
+**Pumping test — Theis transient drawdown:**
+```bash
+python hydrogeo.py pumping theis --q 0.01 --t 1e-3 --s 1e-4 --r 10 --time 3600
+# Output: u value, then drawdown (e.g. m)
+```
+
 ---
 
 ## Project Structure
@@ -130,7 +139,7 @@ HydroGeo Mini Toolkit/
     darcy.py          # Q = K * I * A
     gradient.py       # I = Δh / ΔL
     contamination.py  # mg/L, µg/L, mol/L
-    pumping.py        # Cooper–Jacob transmissivity and storativity
+    pumping.py        # Cooper–Jacob and Theis (transmissivity, storativity, drawdown)
     cli.py            # argument parsing and dispatch
   hydrogeo.py         # CLI entry point
   README.md
@@ -157,6 +166,6 @@ MIT License. Free to use, modify, and redistribute with attribution.
 ## Future Extensions
 
 Planned additions may include:
-- Additional pumping test methods (e.g. Theis)
+- Additional pumping test methods (e.g. type curves)
 - Simple well log visualization
 - Additional chemical property lookups

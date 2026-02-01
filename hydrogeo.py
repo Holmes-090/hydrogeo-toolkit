@@ -10,6 +10,7 @@ Example:
   python hydrogeo.py contam mol2mg --value 0.01 --mw 78.11
   python hydrogeo.py pumping transmissivity --q 0.01 --ds 0.5
   python hydrogeo.py pumping storativity --t 1e-3 --t0 120 --r 10
+  python hydrogeo.py pumping theis --q 0.01 --t 1e-3 --s 1e-4 --r 10 --time 3600
 """
 
 from hydrogeo_toolkit.cli import main

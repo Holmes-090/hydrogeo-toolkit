@@ -181,6 +181,5 @@ MIT License. Free to use, modify, and redistribute with attribution.
 ## Future Extensions
 
 Planned additions may include:
-- Additional pumping test methods (e.g. type curves)
 - Simple well log visualization
 - Additional chemical property lookups
